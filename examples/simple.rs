@@ -26,11 +26,13 @@ fn main() {
         let line = terminal.read_chars();
 
         let args = arguments::parse_arguments(&line);
-        if let None = args {
+        let args = if let Some(a) = args {
+            a
+        } else {
             continue;
-        }
+        };
 
-        let result: Option<command::CommandResult> = match args.unwrap() {
+        let result: Option<command::CommandResult> = match args {
             arguments::ArgumentResult::Command(cmd, args) => {
                 if !commands.contains_key(&cmd) {
                     None
