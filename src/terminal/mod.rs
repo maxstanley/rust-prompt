@@ -19,6 +19,12 @@ pub struct Terminal {
     suggestion_selection: u16,
 }
 
+impl Default for Terminal {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Terminal {
     pub fn new() -> Terminal {
         let stdout = stdout();
@@ -246,7 +252,7 @@ impl Terminal {
                 Ok(c) => match c {
                     Key::Char('\n') => {
                         self.write(clear::AfterCursor);
-                        if self.current_input == "" {
+                        if self.current_input.is_empty() {
                             self.write("\r\n");
                             self.write_prefix();
                             continue;
@@ -309,7 +315,7 @@ impl Terminal {
                         self.current_input = self.previous_input[history_index].clone().to_string();
                     }
                     Key::Down => {
-                        if self.previous_input.len() == 0
+                        if self.previous_input.is_empty()
                             || history_index == self.previous_input.len() - 1
                         {
                             continue;

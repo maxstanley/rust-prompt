@@ -12,18 +12,14 @@ pub enum ArgumentResult {
 }
 
 pub fn parse_arguments<S: AsRef<str>>(line: S) -> Option<ArgumentResult> {
+    let first_char: char = line.as_ref().as_bytes()[0].into();
     let line = line.as_ref().to_string();
 
-    if (line.chars().nth(0).unwrap() > ' ' && line.chars().nth(0).unwrap() < '0')
-        || (line.chars().nth(0).unwrap() > '9' && line.chars().nth(0).unwrap() < 'A')
-    {
-        return Some(ArgumentResult::Special(
-            line.chars().nth(0).unwrap(),
-            line[1..].to_string(),
-        ));
+    if (first_char > ' ' && first_char < '0') || (first_char > '9' && first_char < 'A') {
+        return Some(ArgumentResult::Special(first_char, line[1..].to_string()));
     }
 
-    let mut line_elements = line.split_ascii_whitespace().into_iter();
+    let mut line_elements = line.split_ascii_whitespace();
     let cmd = line_elements.next()?;
     let line_elements: Vec<&str> = line_elements.collect();
 
@@ -36,12 +32,12 @@ pub fn parse_arguments<S: AsRef<str>>(line: S) -> Option<ArgumentResult> {
 
     let mut index = 0;
     loop {
-        if !line_elements[index].to_string().starts_with("-") {
+        if !line_elements[index].to_string().starts_with('-') {
             return None;
         }
         let key = line_elements[index]
             .to_string()
-            .trim_start_matches("-")
+            .trim_start_matches('-')
             .to_string();
 
         index += 1;
@@ -52,7 +48,7 @@ pub fn parse_arguments<S: AsRef<str>>(line: S) -> Option<ArgumentResult> {
 
         let value = line_elements[index].to_string();
 
-        if value.starts_with("-") {
+        if value.starts_with('-') {
             args.insert(key, Argument::Bool);
         } else {
             args.insert(key, Argument::String(value));
