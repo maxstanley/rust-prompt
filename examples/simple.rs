@@ -7,66 +7,15 @@ use std::collections::HashMap;
 fn main() {
     let mut terminal = terminal::Terminal::new();
 
-    let mut commands = HashMap::<
-        String,
-        &dyn Fn(HashMap<String, arguments::Argument>) -> command::CommandResult,
-    >::new();
-    commands.insert("quit".to_string(), &quit);
-    commands.insert("help".to_string(), &help);
-    commands.insert("version".to_string(), &version);
-    commands.insert("ssh".to_string(), &ssh);
-    commands.insert("fail".to_string(), &fail);
-    commands.insert("wtfismyip".to_string(), &wtfismyip);
+    terminal.add_command("quit", quit, "quit application");
+    terminal.add_command("help", help, "show help information");
+    terminal.add_command("version", version, "show application version");
+    terminal.add_command("ssh", ssh, "run ssh");
+    terminal.add_command("fail", fail, "run fail");
+    terminal.add_command("wtfismyip", wtfismyip, "get your IP Address");
+    terminal.add_special_command('!', local_execute, "run command on local system");
 
-    let mut special_commands = HashMap::<char, &dyn Fn(String) -> command::CommandResult>::new();
-    special_commands.insert('!', &local_execute);
-
-    loop {
-        terminal.write_prefix();
-        let line = terminal.read_chars();
-
-        let args = arguments::parse_arguments(&line);
-        let args = if let Some(a) = args {
-            a
-        } else {
-            continue;
-        };
-
-        let result: Option<command::CommandResult> = match args {
-            arguments::ArgumentResult::Command(cmd, args) => {
-                if !commands.contains_key(&cmd) {
-                    None
-                } else {
-                    Some(commands[&cmd](args))
-                }
-            }
-            arguments::ArgumentResult::Special(cmd, args) => {
-                if !special_commands.contains_key(&cmd) {
-                    None
-                } else {
-                    Some(special_commands[&cmd](args))
-                }
-            }
-        };
-
-        match result {
-            Some(output) => match output {
-                command::CommandResult::Exit => break,
-                command::CommandResult::Success(msg) => {
-                    print!("\r\n[SUCCESS] {}", msg)
-                }
-                command::CommandResult::Failure(msg) => {
-                    print!("\r\n[FAILURE] {}", msg)
-                }
-            },
-            None => {
-                terminal.write(format!("\r\n[FAILURE] {}: command not found", line));
-            }
-        }
-        terminal.new_line();
-    }
-
-    terminal.new_line();
+    terminal.run_loop();
 }
 
 fn quit(_: HashMap<String, arguments::Argument>) -> command::CommandResult {
